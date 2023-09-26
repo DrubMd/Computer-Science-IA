@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="form">
+        <h1>{% block title %} Add a New Flashcard {% endblock %}</h1>
+        <form method="post">
+            <label for="term">Term</label>
+            <br>
+            <input type="text" name="term"
+                placeholder="Flashcard term"
+                value="{{ request.form['term'] }}"> </input>
+            <br>
+
+            <label for="defenition">Defenition</label>
+            <br>
+            <input type="text" name="defenition"
+                placeholder="Flashcard defenition"
+                value="{{ request.form['defenition'] }}"> </input>
+            <br>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+{% endblock %}

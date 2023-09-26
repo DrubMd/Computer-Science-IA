@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>{% block title %} Flashcards {% endblock %}</h1>
+    {% for flashcard in flashcards %}
+        <div class='flashcards'>
+            <h1>{{ flashcard['term'] }}</p>
+            <h2 id="defenition" style="display: none;">{{ flashcard['defenition'] }}</h2>
+            <button onclick="showDefenition()">Show Definition</button>
+            <a href="{{ url_for('edit', id=flashcard['id']) }}">Edit</a>
+        </div>
+    {% endfor %}
+{% endblock %}
