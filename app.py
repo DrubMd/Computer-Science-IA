@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
 import sqlite3
-
 from flask_login import (
     LoginManager,
     current_user,
@@ -8,12 +7,36 @@ from flask_login import (
     login_user,
     logout_user,
 )
-
 from oauthlib.oauth2 import WebApplicationClient
 import requests
 
+# Internal imports
+from db import init_db_command
+from user import User
+
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
+GOOGLE_DISCOVERY_URL = (
+    "https://accounts.google.com/.well-known/openid-configuration"
+)
+
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'kjfnjewfjejwejjf'
+app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+# OAuth 2 client setup
+client = WebApplicationClient(GOOGLE_CLIENT_ID)
+
+# Flask-Login helper to retrieve a user from our db
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
+
+def get_google_provider_cfg():
+    return requests.get(GOOGLE_DISCOVERY_URL).json()
+
 
 def get_db_connection():
     conn = sqlite3.connect('database.db')
@@ -31,10 +54,33 @@ def get_flashcard(flashcard_id):
 
 @app.route('/')
 def index():
-    conn = get_db_connection()
-    flashcards = conn.execute('SELECT * FROM flashcards').fetchall()
-    conn.close()
-    return render_template('index.html', flashcards=flashcards)
+    if current_user.is_authenticated:
+        conn = get_db_connection()
+        flashcards = conn.execute('SELECT * FROM flashcards').fetchall()
+        conn.close()
+        return render_template('index.html', flashcards=flashcards)
+    else:
+        return '<a class="button" href="/login">Google Login</a>'
+    
+@app.route("/login")
+def login():
+    # Find out what URL to hit for Google login
+    google_provider_cfg = get_google_provider_cfg()
+    authorization_endpoint = google_provider_cfg["authorization_endpoint"]
+
+    # Use library to construct the request for Google login and provide
+    # scopes that let you retrieve user's profile from Google
+    request_uri = client.prepare_request_uri(
+        authorization_endpoint,
+        redirect_uri=request.base_url + "/callback",
+        scope=["openid", "email", "profile"],
+    )
+    return redirect(request_uri)
+
+@app.route("/login/callback")
+def callback():
+    # Get authorization code Google sent back to you
+    code = request.args.get("code")
 
 @app.route('/create/', methods=('GET', 'POST'))
 def create():
