@@ -8,12 +8,12 @@ with open('schema.sql') as f:
 
 cur = connection.cursor()
 
-cur.execute("INSERT INTO flashcards (term, defenition) VALUES (?, ?)",
-            ('First term', 'First defenition')
+cur.execute("INSERT INTO flashcards (term, definition) VALUES (?, ?)",
+            ('First term', 'First definition')
             )
 
-cur.execute("INSERT INTO flashcards (term, defenition) VALUES (?, ?)",
-            ('Second term', 'Second defenition')
+cur.execute("INSERT INTO flashcards (term, definition) VALUES (?, ?)",
+            ('Second term', 'Second definition')
             )
 
 connection.commit()

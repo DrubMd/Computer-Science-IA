@@ -11,11 +11,11 @@
                 value="{{ request.form['term'] or flashcard['term'] }}"></input>
             <br>
 
-            <label for="defenition">Definition</label>
+            <label for="definition">Definition</label>
             <br>
-            <input type="text" name="defenition"
-                placeholder="Flashcard defenition"
-                value="{{ request.form['defenition'] or flashcard['defenition'] }}"></input>
+            <input type="text" name="definition"
+                placeholder="Flashcard definition"
+                value="{{ request.form['definition'] or flashcard['definition'] }}"></input>
             <br>
             <button type="submit">Submit</button>
         </form>

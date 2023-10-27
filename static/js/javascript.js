@@ -1,8 +1,10 @@
-function showdefenition() {
-    var defenition = document.getElementById("defenition");
-    if (defenition.style.display === "none") {
-        defenition.style.display = "block";
+function showdefinition(id, self) {
+    var definition = document.getElementById("definition-" + id).querySelector(".definition");
+    if (definition.style.display === "none") {
+        self.innerHTML = "Hide definition";
+        definition.style.display = "block";
     } else {
-        defenition.style.display = "none";
+        self.innerHTML = "Show definition";
+        definition.style.display = "none";
     }
 }

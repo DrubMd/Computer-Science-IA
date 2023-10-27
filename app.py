@@ -1,6 +1,16 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
-
 import sqlite3
+
+from flask_login import (
+    LoginManager,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
+
+from oauthlib.oauth2 import WebApplicationClient
+import requests
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'kjfnjewfjejwejjf'
@@ -30,16 +40,16 @@ def index():
 def create():
     if request.method == 'POST':
         term = request.form['term']
-        defenition = request.form['defenition']
+        definition = request.form['definition']
 
         if not term:
             flash('Term is required!')
-        elif not defenition:
-            flash('defenition is required!')
+        elif not definition:
+            flash('definition is required!')
         else:
             conn = get_db_connection()
-            conn.execute('INSERT INTO flashcards (term, defenition) VALUES (?, ?)',
-                         (term, defenition))
+            conn.execute('INSERT INTO flashcards (term, definition) VALUES (?, ?)',
+                         (term, definition))
             conn.commit()
             conn.close()
             return redirect(url_for('index'))
@@ -52,19 +62,19 @@ def edit(id):
 
     if request.method == 'POST':
         term = request.form['term']
-        defenition = request.form['defenition']
+        definition = request.form['definition']
 
         if not term:
             flash('Term is required!')
 
-        elif not defenition:
+        elif not definition:
             flash('Definition is required!')
 
         else:
             conn = get_db_connection()
-            conn.execute('UPDATE flashcards SET term = ?, defenition = ?'
+            conn.execute('UPDATE flashcards SET term = ?, definition = ?'
                          ' WHERE id = ?',
-                         (term, defenition, id))
+                         (term, definition, id))
             conn.commit()
             conn.close()
             return redirect(url_for('index'))
