@@ -1,12 +1,20 @@
 DROP TABLE IF EXISTS flashcards;
 
+CREATE TABLE IF NOT EXISTS users (
+    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    password TEXT NOT NULL
+);
+
 CREATE TABLE flashcards (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     -- created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    user_id INTEGER NOT NULL,
     term TEXT NOT NULL,
-    defenition TEXT NOT NULL -- is definition a keyword?
+    definition TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-ALTER TABLE flashcards
-RENAME COLUMN defenition TO definition;
+
+
 

@@ -1,47 +1,37 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, Response, session
 import sqlite3
-from flask_login import (
-    LoginManager,
-    current_user,
-    login_required,
-    login_user,
-    logout_user,
-)
-from oauthlib.oauth2 import WebApplicationClient
-import requests
-
-# Internal imports
-from db import init_db_command
-from user import User
-
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
-GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
-GOOGLE_DISCOVERY_URL = (
-    "https://accounts.google.com/.well-known/openid-configuration"
-)
+from flask_login import LoginManager, UserMixin, login_required, login_user, logout_user, current_user, login_manager
+from forms import LoginForm, RegistrationForm
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+app.secret_key = 'rcctufiygugugy'
 
-login_manager = LoginManager()
-login_manager.init_app(app)
+login_manager = LoginManager(app)
+login_manager.login_view = "login"
+class User(UserMixin):
+    def __init__(self, id, username, password):
+         self.id = str(id)
+         self.username = username
+         self.password = password
+         self.authenticated = False
+    def is_active(self):
+         return self.is_active()
+    def is_anonymous(self):
+         return False
+    def is_authenticated(self):
+         return self.authenticated
+    def is_active(self):
+         return True
+    def get_id(self):
+         return self.id
 
-# OAuth 2 client setup
-client = WebApplicationClient(GOOGLE_CLIENT_ID)
-
-# Flask-Login helper to retrieve a user from our db
-@login_manager.user_loader
-def load_user(user_id):
-    return User.get(user_id)
-
-def get_google_provider_cfg():
-    return requests.get(GOOGLE_DISCOVERY_URL).json()
 
 
 def get_db_connection():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     return conn
+
 
 def get_flashcard(flashcard_id):
     conn = get_db_connection()
@@ -52,59 +42,79 @@ def get_flashcard(flashcard_id):
         abort(404)
     return flashcard
 
+
+@login_manager.user_loader
+def load_user(user_id):
+   conn = get_db_connection()
+   curs = conn.cursor()
+   curs.execute("SELECT * from users where user_id = (?)",[user_id])
+   user_data = curs.fetchone()
+   if user_data is None:
+    return None
+   else:
+    user = User(user_data['user_id'], user_data['username'], user_data['password'])
+    return user
+   
 @app.route('/')
+@login_required
 def index():
-    if current_user.is_authenticated:
-        conn = get_db_connection()
-        flashcards = conn.execute('SELECT * FROM flashcards').fetchall()
-        conn.close()
-        return render_template('index.html', flashcards=flashcards)
-    else:
-        return '<a class="button" href="/login">Google Login</a>'
-    
-@app.route("/login")
+    user_id = current_user.id
+    conn = get_db_connection()
+    flashcards = conn.execute('SELECT * FROM flashcards WHERE user_id = ?', (user_id,)).fetchall()
+    conn.close()
+    return render_template('index.html', flashcards=flashcards, user_id=user_id)
+
+@app.route("/login", methods=['GET','POST'])
 def login():
-    # Find out what URL to hit for Google login
-    google_provider_cfg = get_google_provider_cfg()
-    authorization_endpoint = google_provider_cfg["authorization_endpoint"]
+  if current_user.is_authenticated:
+     return redirect(url_for('index'))
+  form = LoginForm()
+  if form.validate_on_submit():
+     conn = get_db_connection()
+     curs = conn.cursor()
+     curs.execute("SELECT * FROM users where username = (?)",    [form.username.data])
+     user = list(curs.fetchone())
+     Us = load_user(user[0])
+     if form.username.data == Us.username and form.password.data == Us.password:
+        login_user(Us, remember=form.remember.data)
+        Uname = list({form.username.data})[0].split('@')[0]
+        flash('Logged in successfully '+Uname)
+        redirect(url_for('index'))
+     else:
+        flash('Login Unsuccessfull.')
+  return render_template('login.html',title='Login', form=form)
 
-    # Use library to construct the request for Google login and provide
-    # scopes that let you retrieve user's profile from Google
-    request_uri = client.prepare_request_uri(
-        authorization_endpoint,
-        redirect_uri=request.base_url + "/callback",
-        scope=["openid", "email", "profile"],
-    )
-    return redirect(request_uri)
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Logged out successfully', 'success')
+    return redirect(url_for('login'))
 
-@app.route("/login/callback")
-def callback():
-    # Get authorization code Google sent back to you
-    code = request.args.get("code")
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
 
-# Find out what URL to hit to get tokens that allow you to ask for
-# things on behalf of a user
-google_provider_cfg = get_google_provider_cfg()
-token_endpoint = google_provider_cfg["token_endpoint"]
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        conn = get_db_connection()
+        curs = conn.cursor()
+        curs.execute("SELECT * FROM users WHERE username = ?", [form.username.data])
+        user = curs.fetchone()
 
-# Prepare and send a request to get tokens! Yay tokens!
-token_url, headers, body = client.prepare_token_request(
-    token_endpoint,
-    authorization_response=request.url,
-    redirect_url=request.base_url,
-    code=code
-)
-token_response = requests.post(
-    token_url,
-    headers=headers,
-    data=body,
-    auth=(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET),
-)
+        if user:
+            flash('Registration failed. This username is already taken.', 'error')
+        else:
+            curs.execute("INSERT INTO users (username, password) VALUES (?, ?)", (form.username.data, form.password.data))
+            conn.commit()
+            flash('Registration successful! You can now log in.', 'success')
+            return redirect(url_for('login'))
 
-# Parse the tokens!
-client.parse_request_body_response(json.dumps(token_response.json()))
-
+    return render_template('register.html', title='Register', form=form)
+    
 @app.route('/create/', methods=('GET', 'POST'))
+@login_required
 def create():
     if request.method == 'POST':
         term = request.form['term']
@@ -115,9 +125,10 @@ def create():
         elif not definition:
             flash('definition is required!')
         else:
+            user_id = current_user.id  # Get the user's ID from the current_user
             conn = get_db_connection()
-            conn.execute('INSERT INTO flashcards (term, definition) VALUES (?, ?)',
-                         (term, definition))
+            conn.execute('INSERT INTO flashcards (user_id,term, definition) VALUES (?, ?, ?)',
+                         (user_id, term, definition))
             conn.commit()
             conn.close()
             return redirect(url_for('index'))
@@ -125,6 +136,7 @@ def create():
     return render_template('create.html')
 
 @app.route('/<int:id>/edit/', methods=('GET', 'POST'))
+@login_required
 def edit(id):
     flashcard = get_flashcard(id)
 

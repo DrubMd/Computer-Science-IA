@@ -8,13 +8,10 @@ with open('schema.sql') as f:
 
 cur = connection.cursor()
 
-cur.execute("INSERT INTO flashcards (term, definition) VALUES (?, ?)",
-            ('First term', 'First definition')
+cur.execute("INSERT INTO users (username, password) VALUES (?, ?)",
+            ('DrubMD', '12345678')
             )
-
-cur.execute("INSERT INTO flashcards (term, definition) VALUES (?, ?)",
-            ('Second term', 'Second definition')
-            )
+cur.execute("DELETE FROM users WHERE username = 'DrubMD'")
 
 connection.commit()
 connection.close()
