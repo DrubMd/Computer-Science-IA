@@ -11,21 +11,22 @@ login_manager.login_view = "login"
 
 class User(UserMixin):
     def __init__(self, id, username, password):
-         self.id = str(id)
-         self.username = username
-         self.password = password
-         self.authenticated = False
-    def is_active(self):
-         return self.is_active()
-    def is_anonymous(self):
-         return False
-    def is_authenticated(self):
-         return self.authenticated
-    def is_active(self):
-         return True
-    def get_id(self):
-         return self.id
+        self.id = str(id)
+        self.username = username
+        self.password = password
+        self.authenticated = False
 
+    def is_active(self):
+        return True  # Change this to return True to indicate an active user.
+
+    def is_anonymous(self):
+        return False  # Indicate that the user is not anonymous.
+
+    def is_authenticated(self):
+        return self.authenticated  # Return the value of the 'authenticated' attribute.
+
+    def get_id(self):
+        return self.id
 
 
 def get_db_connection():
@@ -63,7 +64,7 @@ def index():
     conn = get_db_connection()
     flashcards = conn.execute('SELECT * FROM flashcards WHERE user_id = ?', (user_id,)).fetchall()
     conn.close()
-    return render_template('index.html', flashcards=flashcards, user_id=user_id)
+    return render_template('index.html', flashcards=flashcards)
 
 @app.route("/login", methods=['GET','POST'])
 def login():
@@ -78,9 +79,9 @@ def login():
      Us = load_user(user[0])
      if form.username.data == Us.username and form.password.data == Us.password:
         login_user(Us, remember=form.remember.data)
-        Uname = list({form.username.data})[0].split('@')[0]
+        Uname = form.username.data
         flash('Logged in successfully '+Uname)
-        redirect(url_for('index'))
+        return redirect(url_for('index'))
      else:
         flash('Login Unsuccessfull.')
   return render_template('login.html',title='Login', form=form)
@@ -139,7 +140,7 @@ def create():
 @app.route('/<int:id>/edit/', methods=('GET', 'POST'))
 @login_required
 def edit(id):
-    flashcard = get_flashcard(id)
+    flashcard = get_flashcard(id) 
 
     if request.method == 'POST':
         term = request.form['term']

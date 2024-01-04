@@ -1,44 +1,88 @@
 {% extends 'base.html' %}
-    {% block content %}
-    <form method='POST' action="">
+{% block content %}
+<style>
+    /* Custom styles for the form */
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+    }
+    form {
+        max-width: 400px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    label {
+        font-weight: bold;
+    }
+    input[type="text"],
+    input[type="password"],
+    input[type="submit"] {
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+    }
+    .error-message {
+        color: red;
+        margin-top: 5px;
+        font-size: 14px;
+    }
+    .forgot-password {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .create-account {
+        text-align: center;
+    }
+</style>
+
+<form method='POST' action="">
     {{ form.hidden_tag() }}
-    <fieldset class="form-group"> 
     <h1>Log In</h1>
     <div class="form-group">
-        {{ form.username.label(class="form-control-label")}}
+        <label for="username">Username:</label>
+        {{ form.username(class="form-control") }}
         {% if form.username.errors %}
-        {{ form.username(class="form-control form-control-lg is-invalid") }}
-        <div class="invalid-feedback">
-        {% for error in form.username.errors %}
-        <span>{{ error }}</span>
-        {% endfor %}
-        </div>
-        {% else %}  
-        {{ form.username(class="form-control form-control-lg")}}
+            <div class="error-message">
+                {% for error in form.username.errors %}
+                    <span>{{ error }}</span><br>
+                {% endfor %}
+            </div>
         {% endif %}
     </div>
     <div class="form-group">
-        {{ form.password.label(class="form-control-label")}}
+        <label for="password">Password:</label>
+        {{ form.password(class="form-control") }}
         {% if form.password.errors %}
-        {{ form.password(class="form-control form-control-lg is-invalid") }}
-        <div class="invalid-feedback">
-        {% for error in form.password.errors %}
-        <span>{{ error }}</span>
-        {% endfor %}
-        </div>
-        {% else %}
-        {{ form.password(class="form-control form-control-lg")}}
+            <div class="error-message">
+                {% for error in form.password.errors %}
+                    <span>{{ error }}</span><br>
+                {% endfor %}
+            </div>
         {% endif %}
     </div>
     <div class="form-group">
-        {{ form.remember(class="form-check-input") }} 
-        {{ form.remember.label(class="form-check-label") }}
+        {{ form.remember }}
+        {{ form.remember.label }}
     </div>
-    </fieldset>
     <div class="form-group">
-    {{ form.submit(class="btn btn-outline-info")}}
+        {{ form.submit(class="btn btn-info") }}
     </div>
-    <a href="javascript:void(0)" onclick="location.href='/reset'">Forgot Password?</a>
-    </form>
-    <h6>Create an Account <a href="javascript:void(0)" onclick="location.href='/register'">Sign Up Now</a></h6>
-    {% endblock content %}
+    <div class="forgot-password">
+        <a href="/reset">Forgot Password?</a>
+    </div>
+    <div class="create-account">
+        <p>Create an Account <a href="/register">Sign Up Now</a></p>
+    </div>
+</form>
+{% endblock content %}

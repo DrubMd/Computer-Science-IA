@@ -4,10 +4,12 @@
     <h1>{% block title %} Flashcards {% endblock title %}</h1>
     {% for flashcard in flashcards %}
             <div class='flashcards' id="definition-{{ flashcard['id'] }}">
-                <h1>{{ flashcard['term'] }}</p>
+                <h1>{{ flashcard['term'] }}</h1>
                 <h2 class="definition" style="display:none;">{{ flashcard['definition'] }}</h2>
-                <button onclick="showdefinition({{ flashcard['id'] }}, this)">Show Definition</button>
-                <a href="{{ url_for('edit', id=flashcard['id']) }}">Edit</a>
+                <button class="flashcard-button" onclick="showdefinition({{ flashcard['id'] }}, this)">Show Definition</button>
+                <button class="flashcard-button" onclick="readDefinition({{ flashcard['id'] }}, this)">Read Out Aloud</button>
+                <button class="flashcard-button" onclick="showHint({{ flashcard['id'] }}, this)">Show Hint</button>
+                <a class="edit-button" href="{{ url_for('edit', id=flashcard['id']) }}">Edit</a>
             </div>
     {% endfor %}
 {% endblock %}
