@@ -10,10 +10,12 @@ CREATE TABLE flashcards (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     -- created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id INTEGER NOT NULL,
+    sets TEXT NOT NULL,
     term TEXT NOT NULL,
     definition TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+
 
 
 

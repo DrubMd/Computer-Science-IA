@@ -2,8 +2,16 @@
 
 {% block content %}
     <h1>{% block title %} Flashcards {% endblock title %}</h1>
-    {% for flashcard in flashcards %}
-            <div class='flashcards' id="definition-{{ flashcard['id'] }}">
+    
+    <select id="setSelection">
+        <option value="all">All Sets</option>
+        {% for set in sets %}
+            <option value="{{ set[0] }}">{{ set[0] }}</option>
+        {% endfor %}
+    </select>
+    
+        {% for flashcard in flashcards %}
+            <div class='flashcards' id="definition-{{ flashcard['id'] }}" data-set="{{ flashcard['sets'] }}">
                 <h1>{{ flashcard['term'] }}</h1>
                 <h2 class="definition" style="display:none;">{{ flashcard['definition'] }}</h2>
                 <button class="flashcard-button" onclick="showdefinition({{ flashcard['id'] }}, this)">Show Definition</button>
@@ -11,5 +19,23 @@
                 <button class="flashcard-button" onclick="showHint({{ flashcard['id'] }}, this)">Show Hint</button>
                 <a class="edit-button" href="{{ url_for('edit', id=flashcard['id']) }}">Edit</a>
             </div>
-    {% endfor %}
+        {% endfor %}
+
+    <script>
+        // Function to filter flashcards based on selected set
+        document.getElementById('setSelection').addEventListener('change', function() {
+            const selectedSet = this.value;
+            const flashcards = document.querySelectorAll('.flashcards');
+            
+            flashcards.forEach(flashcard => {
+                const dataSet = flashcard.getAttribute('data-set');
+                
+                if (selectedSet === 'all' || dataSet === selectedSet) {
+                    flashcard.style.display = 'block';
+                } else {
+                    flashcard.style.display = 'none';
+                }
+            });
+        });
+    </script>
 {% endblock %}

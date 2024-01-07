@@ -63,8 +63,12 @@ def index():
     user_id = current_user.id
     conn = get_db_connection()
     flashcards = conn.execute('SELECT * FROM flashcards WHERE user_id = ?', (user_id,)).fetchall()
+
+    # Fetching unique sets
+    unique_sets = conn.execute('SELECT DISTINCT sets FROM flashcards WHERE user_id = ?', (user_id,)).fetchall()
     conn.close()
-    return render_template('index.html', flashcards=flashcards)
+
+    return render_template('index.html', flashcards=flashcards, sets=unique_sets)
 
 @app.route("/login", methods=['GET','POST'])
 def login():
@@ -121,16 +125,19 @@ def create():
     if request.method == 'POST':
         term = request.form['term']
         definition = request.form['definition']
+        sets = request.form['sets']
 
         if not term:
             flash('Term is required!')
         elif not definition:
             flash('definition is required!')
+        elif not sets:
+            flash('Set is required!')       
         else:
             user_id = current_user.id  # Get the user's ID from the current_user
             conn = get_db_connection()
-            conn.execute('INSERT INTO flashcards (user_id,term, definition) VALUES (?, ?, ?)',
-                         (user_id, term, definition))
+            conn.execute('INSERT INTO flashcards (user_id, term, definition, sets) VALUES (?, ?, ?,?)',
+                         (user_id, term, definition, sets))
             conn.commit()
             conn.close()
             return redirect(url_for('index'))
@@ -145,6 +152,7 @@ def edit(id):
     if request.method == 'POST':
         term = request.form['term']
         definition = request.form['definition']
+        sets = request.form['sets']
 
         if not term:
             flash('Term is required!')
@@ -152,11 +160,14 @@ def edit(id):
         elif not definition:
             flash('Definition is required!')
 
+        elif not sets:
+            flash('Set is required!')
+
         else:
             conn = get_db_connection()
-            conn.execute('UPDATE flashcards SET term = ?, definition = ?'
+            conn.execute('UPDATE flashcards SET term = ?, definition = ?, sets = ?'
                          ' WHERE id = ?',
-                         (term, definition, id))
+                         (term, definition, sets, id))
             conn.commit()
             conn.close()
             return redirect(url_for('index'))

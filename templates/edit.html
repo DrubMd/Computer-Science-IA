@@ -8,15 +8,23 @@
             <br>
             <input type="text" name="term"
                 placeholder="Flashcard term"
-                value="{{ request.form['term'] or flashcard['term'] }}"></input>
+                value="{{ request.form['term'] or flashcard['term'] }}">
             <br>
 
             <label for="definition">Definition</label>
             <br>
             <input type="text" name="definition"
                 placeholder="Flashcard definition"
-                value="{{ request.form['definition'] or flashcard['definition'] }}"></input>
+                value="{{ request.form['definition'] or flashcard['definition'] }}">
             <br>
+
+            <label for="sets">Set</label>
+            <br>
+            <input type="text" name="sets"
+                placeholder="Flashcard sets"
+                value="{{ request.form['sets'] or flashcard['sets'] }}">
+            <br>
+
             <button type="submit">Submit</button>
         </form>
     </div>

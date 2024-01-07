@@ -106,3 +106,10 @@ button[type="submit"]:hover {
 .edit-button:hover {
     background-color: #006994; /* Darker blue */
 }
+
+#setSelection {
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
